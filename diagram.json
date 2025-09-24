@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "author": "Gustavo Barros da Silveira",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "wokwi-arduino-mega",
+      "id": "mega",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led_red",
+      "top": -140,
+      "left": -40,
+      "attrs": { "color": "red" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_red",
+      "top": -100,
+      "left": 0,
+      "attrs": { "value": "330" }
+    },
+    {
+      "type": "wokwi-photoresistor-sensor",
+      "id": "ldr1",
+      "top": 70.4,
+      "left": -306.4,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-lcd1602",
+      "id": "lcd1",
+      "top": -150.17,
+      "left": 428.8,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    ["led_red:A", "r_red:1", "red", ["v0"]],
+    ["r_red:2", "mega:22", "red", ["v0"]],
+    ["led_red:C", "mega:GND.1", "red", ["v0"]],
+    ["ldr1:GND", "mega:GND.2", "black", ["h28.8", "v201.2", "h279.85"]],
+    ["ldr1:AO", "mega:A0", "green", ["h19.2", "v200.9", "h323.7"]],
+    ["ldr1:VCC", "mega:5V", "red", ["h48", "v201.6", "h249.6", "v-103.5"]],
+    ["lcd1:VSS", "mega:GND.2", "black", ["v0"]],
+    ["lcd1:VDD", "mega:5V", "red", ["v0"]],
+    ["lcd1:VO", "mega:GND.2", "black", ["v0"]],
+    ["lcd1:RS", "mega:7", "blue", ["v0"]],
+    ["lcd1:RW", "mega:GND.2", "black", ["v0"]],
+    ["lcd1:E", "mega:8", "blue", ["v0"]],
+    ["lcd1:D4", "mega:9", "blue", ["v0"]],
+    ["lcd1:D5", "mega:10", "blue", ["v0"]],
+    ["lcd1:D6", "mega:11", "blue", ["v0"]],
+    ["lcd1:D7", "mega:12", "blue", ["v0"]],
+    ["lcd1:A", "mega:5V", "red", ["v158.63", "h-262"]],
+    ["lcd1:K", "mega:GND.2", "black", ["v0"]]
+  ],
+  "dependencies": {}
+}
