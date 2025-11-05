@@ -420,34 +420,58 @@ Nota: Mega serve apenas para programação
 
 ## ⚙️ Configuração do Sistema
 
-### **1. Editar Credenciais WiFi e MQTT**
+### **1. Criar Arquivo de Configuração**
 
-Abra `src/main_esp8266_mqtt.cpp` e configure:
+**Primeira vez configurando o projeto:**
 
-```cpp
-// ============ ALTERE AQUI ============
+```bash
+# 1. Copie o template de configuração
+cp include/config.h.template include/config.h
 
-// WiFi
-const char* WIFI_SSID = "SuaRede";          // Nome da rede WiFi
-const char* WIFI_PASSWORD = "SuaSenha";     // Senha do WiFi
-
-// MQTT Broker
-const char* MQTT_BROKER = "test.mosquitto.org";  // Broker público
-const int MQTT_PORT = 1883;                      // Porta padrão
-
-// =====================================
+# 2. Edite include/config.h com suas credenciais
 ```
 
-### **2. Ajustar Thresholds (Opcional)**
+**Edite `include/config.h` e configure:**
+
+```cpp
+// ============ CONFIGURAÇÃO WiFi ============
+const char *WIFI_SSID = "SuaRede";          // Nome da rede WiFi
+const char *WIFI_PASSWORD = "SuaSenha";     // Senha do WiFi
+
+// ============ CONFIGURAÇÃO MQTT ============
+const char *MQTT_BROKER = "test.mosquitto.org";  // Broker público
+const int MQTT_PORT = 1883;                      // Porta padrão
+
+// ============ IDENTIFICAÇÃO ============
+const char *DEVICE_ID = "c4-seu-nome";      // Seu nome/ID único
+```
+
+⚠️ **Importante:** O arquivo `config.h` contém credenciais e **não será commitado** no Git (está no `.gitignore`).
+
+### **2. Ajustar Nível de Debug (Opcional)**
+
+Em `src/main_esp8266_mqtt.cpp`, linha 28:
+
+```cpp
+#define DEBUG_LEVEL 2  // 0=Nenhum, 1=Erros, 2=Info (padrão), 3=Verbose
+```
+
+**Níveis disponíveis:**
+- `0` = **Produção** - Nenhum log (máxima performance)
+- `1` = **Erros** - Apenas mensagens de erro
+- `2` = **Info** - Informações importantes + erros (padrão)
+- `3` = **Verbose** - Todos os logs (debug completo)
+
+### **3. Ajustar Thresholds (Opcional)**
 
 Configure os limites de classificação conforme seu ambiente:
 
 ```cpp
 Thresholds thresholds = {
-  200,   // dark_critical   (< 200 = muito escuro)
-  400,   // dark_attention  (200-400 = escuro)
-  600,   // light_attention (400-600 = normal)
-  800    // light_critical  (> 800 = muito claro)
+  450,   // dark_critical   (< 450 = muito escuro)
+  600,   // dark_attention  (450-600 = escuro)
+  800,   // light_attention (600-800 = normal)
+  950    // light_critical  (> 950 = muito claro)
 };
 ```
 
@@ -785,14 +809,23 @@ Conectando ao MQTT broker test.mosquitto.org:1883... ✓ Conectado!
 │   ├── main_esp8266_mqtt.cpp    ← Código principal (ESP8266 + MQTT)
 │   └── mega_blank.cpp            ← Template vazio (Arduino Mega)
 │
-├── 📂 include/                   ← Headers (vazio)
+├── 📂 include/
+│   ├── config.h.template         ← Template de configuração (commitar)
+│   ├── config.h                  ← Suas credenciais (NÃO commitar)
+│   └── README                    ← Instruções
+│
 ├── 📂 lib/                       ← Bibliotecas customizadas (vazio)
 ├── 📂 test/                      ← Testes unitários (vazio)
 │
 ├── platformio.ini                ← Configuração dos ambientes
 ├── README.md                     ← Esta documentação
-└── .gitignore                    ← Git ignore
+└── .gitignore                    ← Git ignore (inclui config.h)
 ```
+
+**🔒 Segurança:**
+- `config.h.template` - Template seguro (versão pública)
+- `config.h` - Suas credenciais (ignorado pelo Git)
+- Nunca commite senhas no repositório!
 
 ---
 
