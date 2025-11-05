@@ -538,10 +538,10 @@ graph TD
     "uptime": "seconds"
   },
   "thresholds": {
-    "dark_critical": 200,
-    "dark_attention": 400,
-    "light_attention": 600,
-    "light_critical": 800
+    "dark_critical": 450,
+    "dark_attention": 600,
+    "light_attention": 800,
+    "light_critical": 950
   }
 }
 ```
@@ -563,10 +563,10 @@ Publique no tópico `iot/.../cmd`:
 ```json
 {
   "cmd": "set_thresholds",
-  "dark_critical": 150,
-  "dark_attention": 350,
-  "light_attention": 650,
-  "light_critical": 850
+  "dark_critical": 400,
+  "dark_attention": 550,
+  "light_attention": 750,
+  "light_critical": 900
 }
 ```
 
@@ -722,7 +722,7 @@ Conectando ao MQTT broker test.mosquitto.org:1883... ✓ Conectado!
 | **WiFi** | Ligar placa | Conexão automática ao WiFi |
 | **MQTT** | Aguardar 5s | Conexão ao broker |
 | **Telemetria** | Aguardar 3s | Publicação periódica (302 bytes) |
-| **Sensor** | Cobrir LDR | LDR < 200, status "critico" |
+| **Sensor** | Cobrir LDR | LDR < 450, status "critico" |
 | **LED D2** | Cobrir LDR | LED acende (atenção/crítico) |
 | **On-change** | Variar luz | Publicação imediata ao mudar |
 | **Comando** | Enviar `get_status` | Publicação instantânea |
