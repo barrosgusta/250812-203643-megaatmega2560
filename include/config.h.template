@@ -1,0 +1,36 @@
+// ============================================================================
+// ARQUIVO DE CONFIGURAÇÃO - TEMPLATE
+// ============================================================================
+// INSTRUÇÕES:
+// 1. Copie este arquivo para: include/config.h
+// 2. Preencha suas credenciais em include/config.h
+// 3. O arquivo config.h será ignorado pelo Git (não será commitado)
+// ============================================================================
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// ============================================================================
+// CONFIGURAÇÃO WiFi
+// ============================================================================
+const char *WIFI_SSID = "SuaRedeWiFi";          // Nome da rede WiFi
+const char *WIFI_PASSWORD = "SuaSenhaWiFi";     // Senha do WiFi (deixe "" se aberta)
+
+// ============================================================================
+// CONFIGURAÇÃO MQTT
+// ============================================================================
+const char *MQTT_BROKER = "test.mosquitto.org"; // Broker MQTT público
+const int MQTT_PORT = 1883;                     // Porta MQTT (1883 = não criptografado)
+const char *MQTT_USER = "";                     // Usuário MQTT (vazio para brokers públicos)
+const char *MQTT_PASSWORD = "";                 // Senha MQTT
+
+// ============================================================================
+// IDENTIFICAÇÃO DO DISPOSITIVO
+// ============================================================================
+const char *CAMPUS = "riodosul";                // Campus
+const char *CURSO = "si";                       // Curso (ex: si, ads, etc)
+const char *TURMA = "BSN22025T26F8";            // Turma
+const int CELL_ID = 4;                          // ID da célula/grupo
+const char *DEVICE_ID = "c4-seu-nome";          // ID do dispositivo (use seu nome)
+
+#endif // CONFIG_H
