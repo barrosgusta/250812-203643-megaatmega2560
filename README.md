@@ -73,117 +73,136 @@ pio run -e mega -t upload
 
 ## 🔌 Diagrama de Conexões
 
-### **Configuração: Arduino Mega (Ponte USB) + Arduino ESP8266 WiFi**
+### **Arduino ESP8266 WiFi - Conexões dos Sensores**
 
-Este projeto utiliza:
-- **Arduino Mega 2560**: Apenas como ponte USB-Serial para programação
-- **Arduino ESP8266 WiFi**: Gerencia sensores, LED, WiFi e MQTT
+O Arduino Mega serve apenas como **ponte USB-Serial** para programação. Todos os sensores e atuadores conectam diretamente no **Arduino ESP8266 WiFi**.
 
-⚠️ **IMPORTANTE - PINAGEM INVERTIDA:**
-Sua placa **Arduino ESP8266 WiFi** tem pinagem serial **DIRETA** (não cruzada):
-- TX0(Mega) conecta em **TXD**(ESP8266) ✅
-- RX0(Mega) conecta em **RXD**(ESP8266) ✅
-
-Isso é diferente do padrão, mas está **CORRETO** para sua placa específica!
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│              CONEXÃO PONTE USB (PROGRAMAÇÃO)                        │
-└─────────────────────────────────────────────────────────────────────┘
-
-    Computador USB       Arduino Mega 2560        Arduino ESP8266 WiFi
-       ┌──────┐           ┌─────────────┐          ┌─────────────────┐
-       │      │           │             │          │                 │
-       │ USB ─┼───────────┼─► USB       │          │                 │
-       │      │           │             │          │                 │
-       └──────┘           │ TX0 (Pin 1)─┼──────────┼─► TXD          │
-                          │             │          │                 │
-                          │ RX0 (Pin 0)─┼──────────┼─► RXD          │
-                          │             │          │                 │
-                          │ 5V ─────────┼──────────┼─► VIN          │
-                          │             │          │                 │
-                          │ GND ────────┼──────────┼─► GND          │
-                          │             │          │                 │
-                          └─────────────┘          └─────────────────┘
-                           (Ponte USB)                     │
-                                                            │
-                                                      ┌─────┴──────┐
-                                                      │  Sensores  │
-                                                      │  LDR  LED  │
-                                                      │  A0   D13  │
-                                                      └────────────┘
-
-⚠️  CONFIGURAÇÃO ESPECÍFICA PARA "Arduino ESP8266 WiFi":
-   • TX0 → TXD (DIRETO, não cruzado) ← Sua placa é assim!
-   • RX0 → RXD (DIRETO, não cruzado) ← Diferente do padrão!
-   • Arduino Mega apenas faz ponte USB-Serial
-   • Sensores conectam DIRETO no Arduino ESP8266 WiFi
-
-
-┌─────────────────────────────────────────────────────────────────────┐
-│              SENSORES NO ARDUINO ESP8266 WIFI                       │
-└─────────────────────────────────────────────────────────────────────┘
-
-┌──────────────────────── CIRCUITO LDR ────────────────────────┐
-│                                                               │
-│   5V ──────┬─────[ LDR ]─────┬───────● A0 (ESP8266 WiFi)     │
-│            │                 │                                │
-│            │              [ 10kΩ ]                            │
-│            │                 │                                │
-│            │                 └───────● GND                    │
-│            │                                                  │
-│       (Alimentação)       (Pull-down)                         │
-│                                                               │
-│  Funcionamento:                                               │
-│  - Muita luz  → LDR ~1kΩ   → V_A0 alta → ADC ~800-1023      │
-│  - Pouca luz  → LDR ~100kΩ → V_A0 baixa → ADC ~0-200        │
-│                                                               │
-│  ⚠️  Placa compatível com Arduino UNO (mesmo ADC 10-bit)    │
-│                                                               │
-└───────────────────────────────────────────────────────────────┘
-
-
-┌──────────────────────── CIRCUITO LED ─────────────────────────┐
-│                                                               │
-│   D13 ───[ 330Ω ]────┬───● LED (+) Anodo                     │
-│   (ESP8266)          │                                        │
-│                      └───● LED (-) Catodo ─── GND            │
-│                                                               │
-│  Nota: D13 é o LED_BUILTIN do Arduino ESP8266 WiFi          │
-│        Pode usar LED externo ou o integrado na placa         │
-│                                                               │
-└───────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Power["⚡ Alimentação"]
+        VIN["5V<br/>(Mega ou Fonte)"]
+        GND1[GND]
+    end
+    
+    subgraph ESP["🎛️ Arduino ESP8266 WiFi"]
+        POWER["VIN + GND"]
+        A0["A0<br/>ADC Input"]
+        D2["D2<br/>GPIO4"]
+        WIFI["📡 WiFi<br/>Interno"]
+    end
+    
+    subgraph Sensors["📊 Sensores"]
+        direction TB
+        LDR_VCC["5V"] --> LDR[LDR]
+        LDR --> LDR_DIV["Divisor<br/>de Tensão"]
+        LDR_DIV --> R1["10kΩ<br/>Pull-down"]
+        R1 --> LDR_GND[GND]
+    end
+    
+    subgraph Output["💡 Saída"]
+        direction TB
+        R2["330Ω"] --> LED[LED]
+        LED --> LED_GND[GND]
+    end
+    
+    VIN --> POWER
+    GND1 --> POWER
+    
+    LDR_VCC -.->|5V| VIN
+    LDR_DIV -->|Sinal<br/>Analógico| A0
+    LDR_GND -.->|GND| GND1
+    
+    D2 --> R2
+    LED_GND -.->|GND| GND1
+    
+    WIFI -.->|"Após programação<br/>conecta MQTT"| Cloud[☁️ Internet]
+    
+    style ESP fill:#e1f5ff,stroke:#0288d1,stroke-width:3px
+    style Sensors fill:#fff9e6,stroke:#ffa726,stroke-width:2px
+    style Output fill:#ffe6e6,stroke:#ef5350,stroke-width:2px
+    style Power fill:#e8f5e9,stroke:#66bb6a,stroke-width:2px
+    style Cloud fill:#f3e5f5,stroke:#ab47bc,stroke-width:2px
 ```
 
-### **Tabela de Conexões Completa**
+### **Programação via Arduino Mega (Passthrough USB)**
 
-#### **Ponte USB-Serial (Programação apenas)**
+```mermaid
+graph LR
+    PC["💻 PC via USB"] --> MEGA["Arduino Mega 2560<br/>🔌 Ponte USB-Serial"]
+    MEGA -->|TX0 → TXD| ESP["Arduino ESP8266 WiFi<br/>📡 Controlador Principal"]
+    MEGA -->|RX0 ← RXD| ESP
+    MEGA -->|5V| ESP
+    MEGA -->|GND| ESP
+    
+    ESP -.->|"Após upload<br/>opera independente"| CLOUD["☁️ WiFi + MQTT"]
+    
+    style MEGA fill:#fff4e1
+    style ESP fill:#e1f5ff
+    style PC fill:#f0f0f0
+    style CLOUD fill:#e8f5e9
+```
 
-| Computador | Arduino Mega | Arduino ESP8266 WiFi | Observação |
-|------------|--------------|----------------------|------------|
-| USB | USB | - | Para programar/monitorar |
-| - | **TX0** (Pin 1) | **TXD** | ⚠️ DIRETO (não cruzado!) |
-| - | **RX0** (Pin 0) | **RXD** | ⚠️ DIRETO (não cruzado!) |
-| - | **5V** | **VIN** | Alimentação 5V |
-| - | **GND** | **GND** | Terra comum |
+**⚠️ Importante:** Pinagem direta (TX→TXD, RX→RXD) - Após programação, o ESP8266 opera independentemente.
 
-#### **Sensores e Atuadores (Arduino ESP8266 WiFi)**
+### **Detalhes dos Circuitos**
 
-| Componente | Pino ESP8266 | Via | Destino | Observações |
-|------------|--------------|-----|---------|-------------|
-| **LDR** (terminal 1) | - | - | 5V | Alimentação positiva |
-| **LDR** (terminal 2) | A0 | Direto | A0 | Entrada analógica (0-1023) |
-| **Resistor 10kΩ** (terminal 1) | A0 | - | A0 | Pull-down |
-| **Resistor 10kΩ** (terminal 2) | GND | - | GND | Terra |
-| **LED** (anodo +) | D2 | Via R330Ω | D2 |  externo |
-| **LED** (catodo -) | GND | Direto | GND | Terra |
+#### **Circuito LDR (Sensor de Luminosidade)**
+
+```
+5V ──────┬─────[ LDR ]─────┬───────● A0 (ESP8266 WiFi)
+         │                 │
+         │              [ 10kΩ ]
+         │                 │
+         │                 └───────● GND
+```
+
+**Funcionamento:**
+- **Muita luz**: LDR ~1kΩ → V_A0 alta → ADC ~800-1023
+- **Pouca luz**: LDR ~100kΩ → V_A0 baixa → ADC ~0-200
+- ⚠️ ESP8266 usa ADC 10-bit (0-1023) igual Arduino UNO
+
+#### **Circuito LED (Indicador Visual)**
+
+```
+D2 ───[ 330Ω ]────┬───● LED (+) Anodo
+(GPIO4)           │
+                  └───● LED (-) Catodo ─── GND
+```
+
+**Controle automático:**
+- LDR < 600 (pouca luz) → **LED ON** 💡
+- LDR > 600 (muita luz) → **LED OFF** ⚫
+
+### **Tabela de Conexões**
+
+#### **Sensores e Atuadores → Arduino ESP8266 WiFi**
+
+| Componente | Pino ESP8266 | Observações |
+|------------|--------------|-------------|
+| **LDR** (terminal 1) | 5V | Alimentação positiva |
+| **LDR** (terminal 2) | A0 | Entrada analógica (0-1023) |
+| **Resistor 10kΩ** | A0 ↔ GND | Pull-down do LDR |
+| **LED** (anodo +) | D2 (GPIO4) | Via resistor 330Ω |
+| **LED** (catodo -) | GND | Terra comum |
+
+#### **Programação (Arduino Mega como ponte USB)**
+
+| Mega 2560 | ESP8266 WiFi | Função |
+|-----------|--------------|--------|
+| USB | - | Conexão com PC |
+| TX0 (Pin 1) | TXD | ⚠️ Pinagem direta |
+| RX0 (Pin 0) | RXD | ⚠️ Pinagem direta |
+| 5V | VIN | Alimentação |
+| GND | GND | Terra comum |
+
+**Nota:** Mega serve apenas para programação. Após upload, ESP8266 opera independentemente.
 
 #### **Pinagem Arduino ESP8266 WiFi (Compatível com UNO)**
 
 | Pino | Tipo | Função no Projeto | Observação |
 |------|------|-------------------|------------|
 | **A0** | Analógico | Sensor LDR | ADC 10-bit (0-1023) |
-| **D13** | Digital | LED (builtin) | LED_BUILTIN |
+| **D2** | Digital | LED externo | GPIO4 |
 | **TXD** | Serial | Recebe do Mega | ⚠️ Pinagem invertida |
 | **RXD** | Serial | Envia ao Mega | ⚠️ Pinagem invertida |
 | **VIN** | Power | Alimentação 5V | Do Arduino Mega |
@@ -194,78 +213,206 @@ Isso é diferente do padrão, mas está **CORRETO** para sua placa específica!
 
 ### **Arquitetura do Sistema**
 
+```mermaid
+flowchart TB
+    subgraph Hardware["� Hardware Local"]
+        LDR["📊 Sensor LDR<br/>Pin A0<br/>(0-1023 ADC)"]
+        LED["💡 LED D2<br/>GPIO4<br/>(Indicador)"]
+    end
+    
+    subgraph ESP["🎛️ Arduino ESP8266 WiFi"]
+        direction TB
+        ADC["📈 Leitura ADC<br/>Média Móvel (5 amostras)"] 
+        CLASS["🎯 Classificação<br/>Normal/Atenção/Crítico"]
+        CONTROL["🎮 Controle LED<br/>Lógica: LDR<600 → ON"]
+        CLIENT["� Cliente MQTT<br/>PubSubClient"]
+    end
+    
+    subgraph Network["🌐 Conectividade"]
+        WIFI["📡 WiFi 2.4GHz<br/>ESP8266 Integrado"]
+    end
+    
+    subgraph Cloud["☁️ Nuvem MQTT"]
+        BROKER["🔄 Broker MQTT<br/>test.mosquitto.org:1883"]
+        REMOTE["👤 Usuário Remoto<br/>MQTT Explorer/Cliente"]
+    end
+    
+    LDR -->|"Luminosidade<br/>variável"| ADC
+    ADC -->|"Valor filtrado"| CLASS
+    CLASS -->|"Status atual"| CONTROL
+    CLASS -->|"Telemetria<br/>a cada 3s"| CLIENT
+    CONTROL -->|"ON/OFF"| LED
+    
+    CLIENT <-->|"Pub/Sub"| WIFI
+    WIFI <-->|"TCP/IP<br/>Port 1883"| BROKER
+    BROKER <-->|"Subscribe:<br/>telemetry, events"| REMOTE
+    REMOTE -.->|"Comandos:<br/>get_status,<br/>set_thresholds"| BROKER
+    
+    style Hardware fill:#e8f5e9,stroke:#66bb6a,stroke-width:2px
+    style ESP fill:#e1f5ff,stroke:#0288d1,stroke-width:3px
+    style Network fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    style Cloud fill:#f3e5f5,stroke:#ab47bc,stroke-width:2px
+    
+    style CLASS fill:#fff9c4,stroke:#fdd835,stroke-width:2px
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                       FLUXO DE DADOS                           │
-└────────────────────────────────────────────────────────────────┘
 
-   Sensor LDR          Arduino ESP8266 WiFi         Broker MQTT
-       │                      │                          │
-       ├──► ADC (A0) ────────┤                          │
-       │                  ┌───┴───┐                      │
-       │                  │ Lê    │                      │
-       │                  │ LDR   │                      │
-       │                  │       │                      │
-   LED │◄─── D13 ◄────────┤ Controla                    │
-       │                  │ LED   │                      │
-       │                  │       │                      │
-       │                  │ WiFi  ├──────► Publica ──────┤
-       │                  │ MQTT  │       Telemetria     │
-       │                  │       │◄────── Comandos ─────┤
-       │                  └───────┘                      │
-       │                  │       │◄──── RX ◄── TX ─┤WiFi │
-       │                  └───────┘                 │MQTT │
-       │                                            └─────┘
-       │                                               │
-       │                                               ▼
-       │                                        [Broker MQTT]
-       │                                        test.mosquitto.org
-       │                                               │
-       │                                               ▼
-       │                                        [Cliente MQTT]
-       │                                        (Monitor remoto)
+### **Classificação de Status por Thresholds**
+
+```mermaid
+graph LR
+    subgraph ADC["📊 Leitura ADC (0-1023)"]
+        direction TB
+        V0["0<br/>Escuro<br/>Total"]
+        V450["450<br/>⚠️"]
+        V600["600<br/>✓"]
+        V800["800<br/>✓"]
+        V950["950<br/>⚠️"]
+        V1023["1023<br/>Muito<br/>Claro"]
+    end
+    
+    subgraph Range1["🔴 Crítico (Escuro)"]
+        direction TB
+        R1["ADC < 450<br/>────────<br/>Muito escuro<br/>💡 LED: ON"]
+    end
+    
+    subgraph Range2["🟡 Atenção (Escuro)"]
+        direction TB
+        R2["450 ≤ ADC < 600<br/>────────<br/>Pouca luz<br/>💡 LED: ON"]
+    end
+    
+    subgraph Range3["🟢 Normal"]
+        direction TB
+        R3["600 ≤ ADC < 800<br/>────────<br/>Iluminação ideal<br/>⚫ LED: OFF"]
+    end
+    
+    subgraph Range4["🟡 Atenção (Claro)"]
+        direction TB
+        R4["800 ≤ ADC < 950<br/>────────<br/>Muita luz<br/>⚫ LED: OFF"]
+    end
+    
+    subgraph Range5["🔴 Crítico (Claro)"]
+        direction TB
+        R5["ADC ≥ 950<br/>────────<br/>Luz excessiva<br/>⚫ LED: OFF"]
+    end
+    
+    V0 -.->|"< 450"| R1
+    V450 -.->|"450-599"| R2
+    V600 -.->|"600-799"| R3
+    V800 -.->|"800-949"| R4
+    V950 -.->|"≥ 950"| R5
+    
+    style Range1 fill:#ffcdd2,stroke:#c62828,stroke-width:2px
+    style Range2 fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style Range3 fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    style Range4 fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    style Range5 fill:#ffcdd2,stroke:#c62828,stroke-width:2px
+    style ADC fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+```
+
+**Lógica de Controle do LED:**
+- 🔴 **Crítico/Atenção (escuro)**: LDR < 600 → LED **ON** 💡
+- 🟢 **Normal/Atenção/Crítico (claro)**: LDR ≥ 600 → LED **OFF** ⚫
+
+### **Fluxo de Dados MQTT**
+
+```mermaid
+sequenceDiagram
+    participant LDR as 📊 Sensor LDR
+    participant ESP as 🎛️ ESP8266
+    participant Broker as ☁️ MQTT Broker
+    participant Client as 👤 Cliente Remoto
+    
+    Note over ESP: 🚀 Inicialização
+    ESP->>ESP: Conecta WiFi
+    ESP->>Broker: Conecta MQTT + LWT
+    ESP->>Broker: Publica /state: "online"
+    
+    loop ⏱️ A cada 3 segundos
+        LDR->>ESP: Leitura analógica (0-1023)
+        ESP->>ESP: Média móvel (5 amostras)
+        ESP->>ESP: Classifica status
+        ESP->>ESP: Controla LED
+        ESP->>Broker: Publica /telemetry (QoS 1)
+        Broker->>Client: Encaminha telemetria
+    end
+    
+    Note over ESP,Broker: 🔔 Detecção de mudança
+    LDR->>ESP: Mudança significativa
+    ESP->>ESP: Status alterado
+    ESP->>Broker: Publica /event (imediato)
+    Broker->>Client: Notifica mudança
+    
+    Note over Client,Broker: 📝 Comando remoto
+    Client->>Broker: Publica /cmd: get_status
+    Broker->>ESP: Encaminha comando
+    ESP->>ESP: Processa comando
+    ESP->>Broker: Publica /telemetry
+    Broker->>Client: Retorna dados
+    
+    Note over Client,Broker: ⚙️ Atualizar configuração
+    Client->>Broker: Publica /cmd: set_thresholds
+    Broker->>ESP: Encaminha comando
+    ESP->>ESP: Atualiza thresholds
+    ESP->>Broker: Publica /config (retained)
+    Broker->>Client: Confirma atualização
+    
+    Note over ESP,Broker: ⚠️ Tratamento de erros
+    ESP->>ESP: Detecta WiFi perdido
+    ESP->>ESP: Reconecta WiFi (30s retry)
+    ESP->>ESP: Detecta MQTT perdido
+    ESP->>ESP: Reconecta MQTT (5s retry)
+    ESP->>Broker: Restabelece conexão
+    ESP->>Broker: Publica /state: "online"
+    
+    Note over ESP: 🔌 Desconexão
+    ESP->>ESP: Shutdown/Crash
+    Broker->>Broker: LWT timeout
+    Broker->>Client: Publica /lwt: "offline"
 ```
 
 ### **Pinos Utilizados**
 
-#### **Arduino Mega 2560**
+#### **Arduino ESP8266 WiFi** (Placa principal)
 
 ```
 ┌─────────────────────────────────────────────────┐
 │  Pino    │  Tipo   │   Função                  │
 ├──────────┼─────────┼───────────────────────────┤
 │  A0      │ Analog  │ Sensor LDR (0-1023)       │
-│  D22     │ Digital │ LED indicador             │
-│  TX0 (1) │ Serial  │ Envia para ESP8266        │
-│  RX0 (0) │ Serial  │ Recebe do ESP8266         │
-│  5V      │ Power   │ Alimentação ESP8266       │
+│  D2      │ Digital │ LED (GPIO4)               │
+│  TXD     │ Serial  │ Upload via Mega           │
+│  RXD     │ Serial  │ Upload via Mega           │
+│  VIN     │ Power   │ 5V (do Mega/fonte)        │
 │  GND     │ Ground  │ Terra comum               │
+│  WiFi    │ Interno │ Conecta MQTT              │
 └─────────────────────────────────────────────────┘
 ```
 
-#### **ESP8266 NodeMCU**
+#### **Arduino Mega 2560** (Ponte USB apenas)
 
 ```
 ┌─────────────────────────────────────────────────┐
 │  Pino    │  Tipo   │   Função                  │
 ├──────────┼─────────┼───────────────────────────┤
-│  TX (TXD)│ Serial  │ Envia para Arduino        │
-│  RX (RXD)│ Serial  │ Recebe do Arduino         │
-│  VIN     │ Power   │ Recebe 5V do Arduino      │
+│  USB     │ Serial  │ Conexão com PC            │
+│  TX0 (1) │ Serial  │ Envia para ESP8266        │
+│  RX0 (0) │ Serial  │ Recebe do ESP8266         │
+│  5V      │ Power   │ Alimenta ESP8266          │
 │  GND     │ Ground  │ Terra comum               │
-│  WiFi    │ Interno │ Conecta rede 2.4GHz       │
 └─────────────────────────────────────────────────┘
+
+Nota: Mega serve apenas para programação
 ```
 
 ### **Valores Típicos do LDR (Arduino ESP8266 WiFi)**
 
 | Condição | Resistência LDR | Tensão A0 | ADC (0-1023) | Status |
 |----------|-----------------|-----------|--------------|--------|
-| Escuro total | ~100kΩ | ~0.3V | 0-200 | **Crítico** |
-| Penumbra | ~10kΩ | ~1.0V | 200-400 | **Atenção** |
-| Normal | ~5kΩ | ~1.5V | 400-600 | **Normal** |
-| Iluminado | ~2kΩ | ~2.5V | 600-800 | **Atenção** |
-| Muito claro | ~1kΩ | ~3.0V | 800-1023 | **Crítico** |
+| Escuro total | ~100kΩ | ~0.3V | 0-450 | **Crítico** |
+| Penumbra | ~10kΩ | ~1.0V | 450-600 | **Atenção** |
+| Normal | ~5kΩ | ~1.5V | 600-800 | **Normal** |
+| Iluminado | ~2kΩ | ~2.5V | 800-950 | **Atenção** |
+| Muito claro | ~1kΩ | ~3.0V | 950-1023 | **Crítico** |
 
 ⚠️ **Nota:** Arduino ESP8266 WiFi usa ADC de 10-bit (0-1023) compatível com Arduino UNO.
 
@@ -326,6 +473,26 @@ iot/{campus}/{curso}/{turma}/cell/{cellId}/device/{devId}/
 iot/riodosul/si/BSN22025T26F8/cell/4/device/c4-gustavo-daniel/telemetry
 ```
 
+```mermaid
+graph TD
+    BASE["iot/riodosul/si/BSN22025T26F8<br/>/cell/4/device/c4-gustavo-daniel"]
+    
+    BASE --> STATE["/state<br/>🟢 Status online/offline<br/>Retained"]
+    BASE --> TELEM["/telemetry<br/>📊 Dados do sensor<br/>QoS 1, a cada 3s"]
+    BASE --> EVENT["/event<br/>🔔 Mudanças de status<br/>On-change"]
+    BASE --> CMD["/cmd<br/>📝 Comandos recebidos<br/>Subscribe"]
+    BASE --> CONFIG["/config<br/>⚙️ Configuração atual<br/>Retained"]
+    BASE --> LWT["/lwt<br/>⚠️ Last Will Testament<br/>Retained"]
+    
+    style BASE fill:#e1f5ff,stroke:#0288d1,stroke-width:2px
+    style STATE fill:#c8e6c9,stroke:#66bb6a,stroke-width:2px
+    style TELEM fill:#fff9c4,stroke:#fdd835,stroke-width:2px
+    style EVENT fill:#ffccbc,stroke:#ff7043,stroke-width:2px
+    style CMD fill:#b3e5fc,stroke:#29b6f6,stroke-width:2px
+    style CONFIG fill:#f0f4c3,stroke:#c0ca33,stroke-width:2px
+    style LWT fill:#ffccbc,stroke:#ff7043,stroke-width:2px
+```
+
 ### **Payload de Telemetria (JSON)**
 
 ```json
@@ -380,6 +547,85 @@ Publique no tópico `iot/.../cmd`:
 ```
 
 Resposta: Publicação no tópico `config` com novos valores
+
+---
+
+## 📊 Estados e Transições do Sistema
+
+```mermaid
+stateDiagram-v2
+    [*] --> Inicializando: Power ON
+    
+    Inicializando --> ConectandoWiFi: Setup completo
+    
+    state ConectandoWiFi {
+        [*] --> TentandoWiFi
+        TentandoWiFi --> WiFiOK: Conexão OK
+        TentandoWiFi --> TentandoWiFi: Retry após 30s
+        TentandoWiFi --> ErroWiFi: 10 tentativas falhas
+    }
+    
+    ConectandoWiFi --> ConectandoMQTT: WiFi conectado
+    ConectandoWiFi --> ErroFatal: Timeout WiFi
+    
+    state ConectandoMQTT {
+        [*] --> TentandoMQTT
+        TentandoMQTT --> MQTTOK: Conexão OK
+        TentandoMQTT --> TentandoMQTT: Retry após 5s
+        TentandoMQTT --> ErroMQTT: Broker inacessível
+    }
+    
+    ConectandoMQTT --> Operacional: MQTT conectado
+    
+    state Operacional {
+        [*] --> Lendo
+        Lendo --> ProcessandoADC: Lê A0
+        ProcessandoADC --> MediaMovel: Adiciona à janela
+        MediaMovel --> Classificando: Calcula média
+        
+        Classificando --> Crítico: ADC < 450 ou > 950
+        Classificando --> Atenção: 450-600 ou 800-950
+        Classificando --> Normal: 600-800
+        
+        Normal --> ControlaLED: Atualiza LED
+        Atenção --> ControlaLED: Atualiza LED
+        Crítico --> ControlaLED: Atualiza LED
+        
+        ControlaLED --> VerificaMudança: Compara status
+        
+        VerificaMudança --> PublicaEvento: Status mudou
+        VerificaMudança --> AguardaTelemetria: Status igual
+        
+        PublicaEvento --> AguardaTelemetria: Evento publicado
+        
+        AguardaTelemetria --> PublicaTelemetria: 3s decorridos
+        AguardaTelemetria --> ProcessaComando: Comando recebido
+        
+        PublicaTelemetria --> Lendo: Continue loop
+        ProcessaComando --> PublicaTelemetria: Responde
+    }
+    
+    Operacional --> ConectandoWiFi: WiFi desconectado
+    Operacional --> ConectandoMQTT: MQTT desconectado
+    
+    ErroFatal --> [*]: Reinicia ESP
+    
+    note right of Crítico
+        🔴 ADC < 450 (escuro)
+        ou ADC > 950 (claro)
+        LED: ON se escuro
+    end note
+    
+    note right of Atenção
+        🟡 ADC: 450-600 ou 800-950
+        LED: ON se ADC < 600
+    end note
+    
+    note right of Normal
+        🟢 ADC: 600-800
+        LED: OFF
+    end note
+```
 
 ---
 
