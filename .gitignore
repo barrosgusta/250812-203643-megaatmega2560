@@ -3,3 +3,16 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+
+# Credentials and local config
+include/config.h
+
+# Editor files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Backup files
+*.bak
+*.orig
