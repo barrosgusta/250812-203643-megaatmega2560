@@ -732,6 +732,11 @@ Conectando ao MQTT broker test.mosquitto.org:1883... ✓ Conectado!
 
 ## 🛠️ Troubleshooting
 
+### **Erro: config.h: No such file or directory**
+- ✅ Você precisa criar o arquivo `include/config.h` a partir do template
+- ✅ Execute: `cp include/config.h.template include/config.h`
+- ✅ Edite `include/config.h` com suas credenciais
+
 ### **Não consegue fazer upload**
 - ✅ Arduino Mega conectado via USB ao computador
 - ✅ Arduino ESP8266 WiFi conectado ao Mega (TX0→TXD, RX0→RXD, 5V, GND)
@@ -768,12 +773,12 @@ Conectando ao MQTT broker test.mosquitto.org:1883... ✓ Conectado!
 - ✅ Teste LDR com multímetro (resistência varia com luz?)
 - ✅ Troque o LDR se estiver queimado
 
-### **LED D13 não acende**
-- ✅ D13 (LED_BUILTIN) tem lógica normal: `HIGH = ligado`, `LOW = apagado`
+### **LED D2 não acende**
+- ✅ D2 (GPIO4) controla o LED externo
 - ✅ LED deve acender quando status = "atencao" ou "critico"
 - ✅ Cubra o LDR completamente para forçar status crítico
-- ✅ Se usar LED externo, verifique polaridade (anodo +, catodo -)
-- ✅ Resistor de 330Ω presente se usar LED externo
+- ✅ Verifique polaridade (anodo +, catodo -)
+- ✅ Resistor de 330Ω presente
 
 ### **Valores oscilando muito**
 - ✅ Normal: média móvel suaviza em ~1 segundo (5 amostras)
@@ -786,6 +791,12 @@ Conectando ao MQTT broker test.mosquitto.org:1883... ✓ Conectado!
 - ✅ Não inverta os cabos! Conecte como está: TX0(Mega)→TXD(ESP8266)
 - ✅ Baud rate correto: 115200
 - ✅ Tente segurar botão RESET do Arduino ao iniciar upload
+
+### **Performance lenta / Travamentos**
+- ✅ Reduza o nível de debug: `DEBUG_LEVEL 1` ou `0`
+- ✅ Logs Serial bloqueiam execução (~10-100ms por mensagem)
+- ✅ `DEBUG_LEVEL 0` em produção = 50% mais rápido
+- ✅ Verifique uso de memória com `ESP.getFreeHeap()`
 
 ---
 
