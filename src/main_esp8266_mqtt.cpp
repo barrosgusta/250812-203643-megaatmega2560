@@ -16,48 +16,66 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include "config.h" // Configurações WiFi, MQTT e identificação
+
+// ============================================================================
+// DEBUG LEVELS
+// ============================================================================
+// 0 = Nenhum log (produção)
+// 1 = Apenas erros
+// 2 = Informações importantes (padrão)
+// 3 = Modo verbose (todos os logs)
+#define DEBUG_LEVEL 3
+
+// Macros para controle de debug
+#if DEBUG_LEVEL >= 1
+#define DEBUG_ERROR(x) Serial.print(x)
+#define DEBUG_ERRORLN(x) Serial.println(x)
+#else
+#define DEBUG_ERROR(x)
+#define DEBUG_ERRORLN(x)
+#endif
+
+#if DEBUG_LEVEL >= 2
+#define DEBUG_INFO(x) Serial.print(x)
+#define DEBUG_INFOLN(x) Serial.println(x)
+#else
+#define DEBUG_INFO(x)
+#define DEBUG_INFOLN(x)
+#endif
+
+#if DEBUG_LEVEL >= 3
+#define DEBUG_VERBOSE(x) Serial.print(x)
+#define DEBUG_VERBOSELN(x) Serial.println(x)
+#else
+#define DEBUG_VERBOSE(x)
+#define DEBUG_VERBOSELN(x)
+#endif
 
 // ============================================================================
 // CONFIGURAÇÃO DE HARDWARE
 // ============================================================================
-static const uint8_t LDR_PIN = A0;           // Sensor LDR (porta analógica A0 - ADC do ESP8266)
-static const uint8_t LED_PIN = D2;         
-
-// ============================================================================
-// CONFIGURAÇÃO - ALTERE AQUI SUAS CREDENCIAIS
-// ============================================================================
-const char* WIFI_SSID = "Guest";
-const char* WIFI_PASSWORD = "";
-
-const char* MQTT_BROKER = "test.mosquitto.org";  // ou broker.hivemq.com
-const int MQTT_PORT = 1883;
-const char* MQTT_USER = "";  // Vazio para brokers públicos
-const char* MQTT_PASSWORD = "";
-
-// Identificação do dispositivo
-const char* CAMPUS = "riodosul";
-const char* CURSO = "si";
-const char* TURMA = "BSN22025T26F8";
-const int CELL_ID = 4;  
-const char* DEVICE_ID = "c4-gustavo-daniel";
+static const uint8_t LDR_PIN = A0; // Sensor LDR (porta analógica A0 - ADC do ESP8266)
+static const uint8_t LED_PIN = D2;
 
 // ============================================================================
 // THRESHOLDS - Classificação de Status
 // ============================================================================
 // ATENÇÃO: LDR invertido - Valores ALTOS = muita luz, BAIXOS = escuro
 // Quanto MAIOR o valor, MAIS LUZ tem no ambiente
-struct Thresholds {
-  int dark_critical;    // < 450 = muito escuro (crítico)
-  int dark_attention;   // 450-600 = pouca luz (atenção)
-  int light_attention;  // 600-800 = muita luz (atenção)
-  int light_critical;   // > 800 = luz excessiva (crítico)
+struct Thresholds
+{
+	int dark_critical;	 // < 450 = muito escuro (crítico)
+	int dark_attention;	 // 450-600 = pouca luz (atenção)
+	int light_attention; // 600-800 = muita luz (atenção)
+	int light_critical;	 // > 800 = luz excessiva (crítico)
 };
 
 Thresholds thresholds = {
-  450,   // dark_critical: < 450 = muito escuro
-  600,   // dark_attention: 450-600 = pouca luz
-  800,   // light_attention: 600-800 = muita luz
-  950    // light_critical: > 950 = luz excessiva
+	450, // dark_critical: < 450 = muito escuro
+	600, // dark_attention: 450-600 = pouca luz
+	800, // light_attention: 600-800 = muita luz
+	950	 // light_critical: > 950 = luz excessiva
 };
 
 // ============================================================================
