@@ -39,8 +39,8 @@ pio device monitor -e esp8266
 - 1x Arduino Mega 2560 (apenas para programação via USB)
 - 1x Sensor LDR (Light Dependent Resistor)
 - 1x Resistor 10kΩ (pull-down do LDR)
-- 1x LED (ou use o LED_BUILTIN da placa - D13)
-- 1x Resistor 330Ω (se usar LED externo)
+- 1x LED externo
+- 1x Resistor 330Ω (para o LED)
 - Jumpers para conexão Mega ↔ ESP8266
 - Protoboard
 - Cabo USB para programação
