@@ -106,13 +106,14 @@ String currentStatus = "normal";
 String previousStatus = "";
 
 unsigned long lastTelemetryTime = 0;
-const unsigned long TELEMETRY_INTERVAL = 3000;  // 3 segundos
+const unsigned long TELEMETRY_INTERVAL = 3000; // 3 segundos
 
 unsigned long lastReconnectAttempt = 0;
 const unsigned long RECONNECT_INTERVAL = 5000;
 
 unsigned long startTime = 0;
 unsigned long telemetryCount = 0;
+bool telemetryEnabled = false; // Telemetria só inicia após comando get_status
 
 // ============================================================================
 // DECLARAÇÕES FORWARD
