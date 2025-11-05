@@ -4,9 +4,9 @@
 // ============================================================================
 // Hardware:
 // - Arduino ESP8266 WiFi (placa compatível com UNO)
-// - LDR no pino A5 + resistor 10kΩ
+// - LDR no pino A0 + resistor 10kΩ
 // - LED no pino D2
-// 
+//
 // Programação via Arduino Mega (ponte USB-Serial):
 //   TX0(Mega) → TXD(ESP8266) - Pinagem direta (não cruzada)
 //   RX0(Mega) → RXD(ESP8266) - Placa com inversão interna
